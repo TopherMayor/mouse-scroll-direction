@@ -1,0 +1,8 @@
+Mouse Scroll Direction
+
+Copyright 2026 Christopher Johns.
+
+The event-tap design was informed by the public documentation and source of
+Scroll Reverser (https://github.com/pilotmoon/Scroll-Reverser), licensed under
+the Apache License, Version 2.0. This project is a separate implementation and
+does not copy Scroll Reverser's source files.
