@@ -19,6 +19,10 @@ final class ScrollEventTap {
             callback: { _, type, event, userInfo in
                 guard let userInfo else { return Unmanaged.passUnretained(event) }
                 let owner = Unmanaged<ScrollEventTap>.fromOpaque(userInfo).takeUnretainedValue()
+                if type == .tapDisabledByTimeout {
+                    owner.reenable()
+                    return Unmanaged.passUnretained(event)
+                }
                 return owner.process(type: type, event: event)
             },
             userInfo: userInfo
@@ -37,17 +41,18 @@ final class ScrollEventTap {
         let hasMomentum = event.getDoubleValueField(.scrollWheelEventMomentumPhase) != 0
         let scrollCount = event.getDoubleValueField(.scrollWheelEventScrollCount)
         let device = classifier.classify(isContinuous: continuous, hasPhase: hasPhase, hasMomentum: hasMomentum, scrollCount: scrollCount)
-        let deltas = ScrollDeltas(
-            vertical: event.getDoubleValueField(.scrollWheelEventFixedPtDeltaAxis1),
-            horizontal: event.getDoubleValueField(.scrollWheelEventFixedPtDeltaAxis2)
-        )
-        let transformed = policy.transform(deltas, for: device)
-        guard transformed != deltas else { return Unmanaged.passUnretained(event) }
-        event.setDoubleValueField(.scrollWheelEventFixedPtDeltaAxis1, value: transformed.vertical)
-        event.setDoubleValueField(.scrollWheelEventFixedPtDeltaAxis2, value: transformed.horizontal)
-        event.setIntegerValueField(.scrollWheelEventDeltaAxis1, value: Int64(transformed.vertical.rounded()))
-        event.setIntegerValueField(.scrollWheelEventDeltaAxis2, value: Int64(transformed.horizontal.rounded()))
+        guard policy.shouldReverse(device) else { return Unmanaged.passUnretained(event) }
+        event.setDoubleValueField(.scrollWheelEventFixedPtDeltaAxis1, value: -event.getDoubleValueField(.scrollWheelEventFixedPtDeltaAxis1))
+        event.setDoubleValueField(.scrollWheelEventFixedPtDeltaAxis2, value: -event.getDoubleValueField(.scrollWheelEventFixedPtDeltaAxis2))
+        event.setIntegerValueField(.scrollWheelEventPointDeltaAxis1, value: -event.getIntegerValueField(.scrollWheelEventPointDeltaAxis1))
+        event.setIntegerValueField(.scrollWheelEventPointDeltaAxis2, value: -event.getIntegerValueField(.scrollWheelEventPointDeltaAxis2))
+        event.setIntegerValueField(.scrollWheelEventDeltaAxis1, value: -event.getIntegerValueField(.scrollWheelEventDeltaAxis1))
+        event.setIntegerValueField(.scrollWheelEventDeltaAxis2, value: -event.getIntegerValueField(.scrollWheelEventDeltaAxis2))
         return Unmanaged.passUnretained(event)
+    }
+
+    private func reenable() {
+        if let tap { CGEvent.tapEnable(tap: tap, enable: true) }
     }
 }
 
