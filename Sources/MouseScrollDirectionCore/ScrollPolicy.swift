@@ -16,13 +16,20 @@ public struct ScrollDeltas: Equatable {
     }
 }
 
-public struct ScrollPolicy {
-    public var reverseMouse: Bool
-    public var reverseTrackpad: Bool
+/// Mutable at runtime — the menu toggles `reverseMouse` and `reverseTrackpad`.
+/// Settings persist via UserDefaults with keys `msd.reverseMouse` and `msd.reverseTrackpad`.
+public final class ScrollPolicy {
+    public var reverseMouse: Bool {
+        didSet { UserDefaults.standard.set(reverseMouse, forKey: "msd.reverseMouse") }
+    }
+    public var reverseTrackpad: Bool {
+        didSet { UserDefaults.standard.set(reverseTrackpad, forKey: "msd.reverseTrackpad") }
+    }
 
-    public init(reverseMouse: Bool = true, reverseTrackpad: Bool = false) {
-        self.reverseMouse = reverseMouse
-        self.reverseTrackpad = reverseTrackpad
+    public init() {
+        let defaults = UserDefaults.standard
+        self.reverseMouse = defaults.object(forKey: "msd.reverseMouse") as? Bool ?? true
+        self.reverseTrackpad = defaults.object(forKey: "msd.reverseTrackpad") as? Bool ?? false
     }
 
     public func shouldReverse(_ device: ScrollDevice) -> Bool {
@@ -31,11 +38,6 @@ public struct ScrollPolicy {
         case .trackpad: return reverseTrackpad
         case .unknown: return false
         }
-    }
-
-    public func transform(_ deltas: ScrollDeltas, for device: ScrollDevice) -> ScrollDeltas {
-        guard shouldReverse(device) else { return deltas }
-        return ScrollDeltas(vertical: -deltas.vertical, horizontal: -deltas.horizontal)
     }
 }
 
@@ -56,8 +58,6 @@ public struct ScrollDeviceClassifier {
             lastDevice = .trackpad
             return .trackpad
         }
-        // Ambiguous continuous events inherit the most recent known source. If there
-        // is no history, leave them untouched rather than risking a trackpad reversal.
         let result = lastDevice ?? .unknown
         if result != .unknown { lastDevice = result }
         return result
