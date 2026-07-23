@@ -22,20 +22,16 @@ public final class ScrollPolicy {
     public var reverseMouse: Bool {
         didSet { UserDefaults.standard.set(reverseMouse, forKey: "msd.reverseMouse") }
     }
-    public var reverseTrackpad: Bool {
-        didSet { UserDefaults.standard.set(reverseTrackpad, forKey: "msd.reverseTrackpad") }
-    }
 
     public init() {
         let defaults = UserDefaults.standard
         self.reverseMouse = defaults.object(forKey: "msd.reverseMouse") as? Bool ?? true
-        self.reverseTrackpad = defaults.object(forKey: "msd.reverseTrackpad") as? Bool ?? false
     }
 
     public func shouldReverse(_ device: ScrollDevice) -> Bool {
         switch device {
         case .mouse: return reverseMouse
-        case .trackpad: return reverseTrackpad
+        case .trackpad: return false
         case .unknown: return false
         }
     }

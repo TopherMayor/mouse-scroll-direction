@@ -79,14 +79,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let reverseItem = NSMenuItem(title: "Reverse Mouse Scrolling", action: #selector(toggleReverseMouse), keyEquivalent: "")
         reverseItem.target = self
         reverseItem.state = eventTap.policy.reverseMouse ? .on : .off
-        reverseItem.toolTip = "When enabled, mouse wheel scrolling is reversed (traditional direction)"
+        reverseItem.toolTip = "When enabled, mouse scroll direction is inverse of trackpad"
         menu.addItem(reverseItem)
-
-        let reverseTrackpadItem = NSMenuItem(title: "Reverse Trackpad Scrolling", action: #selector(toggleReverseTrackpad), keyEquivalent: "")
-        reverseTrackpadItem.target = self
-        reverseTrackpadItem.state = eventTap.policy.reverseTrackpad ? .on : .off
-        reverseTrackpadItem.toolTip = "When enabled, trackpad scrolling is also reversed"
-        menu.addItem(reverseTrackpadItem)
 
         menu.addItem(.separator())
 
@@ -129,11 +123,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         rebuildMenu()
     }
 
-    @objc private func toggleReverseTrackpad() {
-        eventTap.policy.reverseTrackpad.toggle()
-        rebuildMenu()
-    }
-
     @objc private func toggleAcceleration() {
         MouseAcceleration.shared.isEnabled.toggle()
         rebuildMenu()
@@ -143,10 +132,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let alert = NSAlert()
         alert.messageText = "Mouse Scroll Direction"
         alert.informativeText = """
-            Reverses mouse scroll direction without changing the trackpad.
+            Reverses mouse scroll direction relative to trackpad.
 
-            Mouse scrolling: \(eventTap.policy.reverseMouse ? "Reversed" : "Natural")
-            Trackpad scrolling: \(eventTap.policy.reverseTrackpad ? "Reversed" : "Natural")
+            Mouse scrolling: \(eventTap.policy.reverseMouse ? "Reversed (inverse of trackpad)" : "Same as trackpad")
             Mouse acceleration: \(MouseAcceleration.shared.isEnabled ? "Enabled" : "Disabled")
 
             Settings are saved automatically.
